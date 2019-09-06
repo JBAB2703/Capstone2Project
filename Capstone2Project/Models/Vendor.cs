@@ -33,5 +33,7 @@ namespace Capstone2Project.Models {
         public string Phone { get; set; }
         [MaxLength(255)]
         public string Email { get; set; }
+
+        public virtual ICollection<Product> Products  { get; set; }
     }
 }

@@ -55,6 +55,9 @@ namespace Capstone2Project.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                //call recalculate method
+                var success = RecalculateRequestTotal(id);
+                if (!success) { return this.StatusCode(500); }
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -77,6 +80,9 @@ namespace Capstone2Project.Controllers
         {
             _context.RequestLines.Add(requestLine);
             await _context.SaveChangesAsync();
+            ////call recalculate
+            var success = RecalculateRequestTotal(requestLine.Id);
+            if (!success) { return this.StatusCode(500); }
 
             return CreatedAtAction("GetRequestLine", new { id = requestLine.Id }, requestLine);
         }
@@ -93,6 +99,9 @@ namespace Capstone2Project.Controllers
 
             _context.RequestLines.Remove(requestLine);
             await _context.SaveChangesAsync();
+            //call recalculate
+            var success = RecalculateRequestTotal(id);
+            if (!success) { return this.StatusCode(500); }
 
             return requestLine;
         }
@@ -100,6 +109,23 @@ namespace Capstone2Project.Controllers
         private bool RequestLineExists(int id)
         {
             return _context.RequestLines.Any(e => e.Id == id);
+        }
+        //Recalculate the total in the Request
+        private bool RecalculateRequestTotal(int requestId) {
+            var request = _context.Requests.SingleOrDefault(r => r.Id == requestId);
+            if (request == null) {
+                return false;
+            }
+            request.Total = _context.RequestLines
+                .Include(l => l.Product)
+                .Where(l => l.RequestId == requestId)
+                .Sum(l => l.Quantity * l.Product.Price);
+
+            if (request.Status == "Review")
+                request.Status = "Revised";
+
+            _context.SaveChanges();
+            return true;
         }
     }
 }

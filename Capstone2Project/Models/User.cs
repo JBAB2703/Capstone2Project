@@ -31,5 +31,7 @@ namespace Capstone2Project.Models {
         public bool IsReviewer { get; set; }
         [Required]
         public bool IsAdmin { get; set; }
+
+        public virtual ICollection<Request> Requests { get; set; }
     }
 }
